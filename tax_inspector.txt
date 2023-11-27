@@ -1,0 +1,16 @@
+Inspector Smith
+101
+TaxPayer
+John Doe
+1
+Tax
+Income Tax
+1000.0
+2023-04-15
+true
+Tax
+Property Tax
+500.0
+2023-06-30
+false
+

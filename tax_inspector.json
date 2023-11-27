@@ -1,0 +1,1 @@
+{"name":"Inspector Smith","id":"101","taxPayers":[{"name":"John Doe","id":"1","taxes":[{"name":"Income Tax","amount":"1000.0","date":[2023,4,15],"paid":true},{"name":"Property Tax","amount":"500.0","date":[2023,6,30],"paid":false}]}]}

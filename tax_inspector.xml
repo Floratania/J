@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?><taxInspector><name>Inspector Smith</name><id>101</id><taxPayers><name>John Doe</name><id>1</id><taxes><name>Income Tax</name><amount>1000.0</amount><date>2023-04-15</date><paid>true</paid></taxes><taxes><name>Property Tax</name><amount>500.0</amount><date>2023-06-30</date><paid>false</paid></taxes></taxPayers></taxInspector>
