@@ -36,6 +36,9 @@ dependencies {
 // https://mvnrepository.com/artifact/org.glassfish.expressly/expressly
     implementation group: 'org.glassfish.expressly', name: 'expressly', version: '5.0.0'
 
+    implementation 'org.postgresql:postgresql:42.2.27'
+
+
 
 
 }

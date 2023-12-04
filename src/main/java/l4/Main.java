@@ -9,6 +9,7 @@ public class Main {
     public static void main(String[] args) {
         // Create some Tax objects
         Tax tax1 = new Tax.TaxBuilder("Income Tax")
+                .id(1)
                 .amount(1000.0)
                 .date(LocalDate.of(2023, 1, 15))
                 .paid(true)
@@ -16,6 +17,7 @@ public class Main {
                 .build();
 
         Tax tax2 = new Tax.TaxBuilder("Property Tax")
+                .id(2)
                 .amount(500.0)
                 .date(LocalDate.of(2023, 2, 28))
                 .paid(false)

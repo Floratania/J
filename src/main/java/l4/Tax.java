@@ -13,18 +13,20 @@ import jakarta.validation.constraints.*;
 import java.util.Set;
 
 public class Tax {
+    private long id;
     @Size(min = 3, max = 50, message = "Name must be between 3 and 50 characters")
-    private final String name;
+    private String name;
 
     @Positive(message = "Amount must be non-negative or 0")
-    private final double amount;
+    private double amount;
     @NotNull
-    private final LocalDate date;
-    private final boolean paid;
+    private LocalDate date;
+    private boolean paid;
     @PastOrPresent(message = "Date of paid must be in the past or present")
     private final LocalDate dateOfPaid;
 
     public Tax(TaxBuilder builder) {
+        this.id = builder.id;
         this.name = builder.name;
         this.amount = builder.amount;
         this.date = builder.date;
@@ -32,12 +34,15 @@ public class Tax {
         this.dateOfPaid = builder.dateOfPaid;
     }
 
+
+
+
     /**
      * Returns a string representation of the tax object.
      */
     @Override
     public String toString() {
-        return "Tax{" +
+        return "Tax{" +"id='" + id + '\'' +
                 "name='" + name + '\'' +
                 ", amount=" + amount +
                 ", date=" + date +
@@ -76,7 +81,8 @@ public class Tax {
                 paid == tax.paid &&
                 Objects.equals(name, tax.name) &&
                 Objects.equals(date, tax.date) &&
-                Objects.equals(dateOfPaid, tax.dateOfPaid);
+                Objects.equals(dateOfPaid, tax.dateOfPaid) &&
+                Objects.equals(id, tax.id);
     }
 
     /**
@@ -84,13 +90,26 @@ public class Tax {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(name, amount, date, paid, dateOfPaid);
+        return Objects.hash(id, name, amount, date, paid, dateOfPaid);
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public LocalDate getDateOfPaid() {
+        return dateOfPaid;
+    }
+
+    public void setAmount(double v) {
+        this.amount = v;
     }
 
 
     public static class TaxBuilder {
 
-        private String name;
+        public long id;
+        private final String name;
 
 
         private double amount;
@@ -105,6 +124,11 @@ public class Tax {
 
         public TaxBuilder(String name) {
             this.name = name;
+        }
+
+        public TaxBuilder id(long id) {
+            this.id = id;
+            return this;
         }
 
         public TaxBuilder amount(double amount) {
@@ -123,11 +147,11 @@ public class Tax {
         }
 
         public TaxBuilder dateOfPaid(LocalDate dateOfPaid) {
-            if (paid) {
+//            if (paid) {
                 this.dateOfPaid = dateOfPaid;
-            } else {
-                throw new IllegalStateException("Cannot set dateOfPaid when paid is false");
-            }
+//            } else {
+//                throw new IllegalStateException("Cannot set dateOfPaid when paid is false");
+//            }
             return this;
         }
 
