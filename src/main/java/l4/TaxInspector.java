@@ -32,11 +32,16 @@ public class TaxInspector {
         // You can initialize any default values here if needed
     }
 
-    private TaxInspector(Builder builder) {
+    public TaxInspector(Builder builder) {
         this.name = builder.name;
         this.id = builder.id;
         this.taxPayers = builder.taxPayers;
     }
+
+    public TaxInspector(String name) {
+        this.name = name;
+    }
+
 
     /**
      * Returns a string representation of the tax inspector object.
@@ -95,6 +100,10 @@ public class TaxInspector {
             this.taxPayers = new ArrayList<>();
         }
         this.taxPayers.add(taxPayer);
+    }
+
+    public void setId(long id) {
+        this.id = (int) id;
     }
 
 

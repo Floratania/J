@@ -14,15 +14,20 @@ public class TaxPayer {
     @NotBlank(message = "Name cannot be blank")
     private final String name;
     @Positive(message = "ID must be a positive integer")
-    private final int id;
+    private int id;
+    private long taxInspectorId;
     private final List<Tax> taxes;
 
     // Private constructor for the builder
-    private TaxPayer(Builder builder) {
+
+
+    public TaxPayer(Builder builder) {
         this.name = builder.name;
         this.id = builder.id;
         this.taxes = builder.taxes;
+        this.taxInspectorId = builder.taxInspectorId;
     }
+
 
 
     @Override
@@ -73,37 +78,56 @@ public class TaxPayer {
         return taxes;
     }
 
-    public String getId() {
-        return String.valueOf(id);
+    public int getId() {
+        return id;
     }
 
     public void addTax(Tax tax) {
         this.taxes.add(tax);
     }
 
+    public int getTaxPayerId() {
+        return id;
+    }
+
+    public long getTaxInspectorId() {
+        return taxInspectorId;
+    }
+
+    public void setTaxInspectorId(long taxInspectorId) {
+        this.taxInspectorId = taxInspectorId;
+    }
+
+    public void setId(int generatedId) {
+        this.id = generatedId;
+    }
 
     /**
      * A builder class for constructing taxpayer objects.
      */
     public static class Builder {
-        private String name;
-
+        private final String name;
         private int id;
-
-        private List<Tax> taxes;
+        private List<Tax> taxes = new ArrayList<>();
+        private long taxInspectorId;
 
         /**
          * Constructor for the taxpayer builder.
          *
          * @param name The name of the taxpayer.
-
          */
         public Builder(String name) {
             this.name = name;
         }
 
+
+
         public Builder id(int id){
             this.id = id;
+            return this;
+        }
+        public Builder taxInspectorId(long i) {
+            this.taxInspectorId = i;
             return this;
         }
 
@@ -137,16 +161,18 @@ public class TaxPayer {
             ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
             Validator validator = factory.getValidator();
 
-            Set<String> validationMessages = new HashSet<>();
+            StringBuilder validationMessages = new StringBuilder();
             Set<ConstraintViolation<TaxPayer>> violations = validator.validate(taxpayer);
 
-
             for (ConstraintViolation<TaxPayer> violation : violations) {
-                validationMessages.add(violation.getInvalidValue() + ": " + violation.getMessage());
+                validationMessages.append(violation.getPropertyPath()).append(": ")
+                        .append(violation.getInvalidValue()).append(": ")
+                        .append(violation.getMessage()).append(", ");
             }
 
-            if (!violations.isEmpty()) {
-                throw new IllegalArgumentException("Invalid fields: " + String.join(", ", validationMessages));
+            if (!validationMessages.isEmpty()) {
+                validationMessages.delete(validationMessages.length() - 2, validationMessages.length());  // Remove trailing comma and space
+                throw new IllegalArgumentException("Invalid fields: " + validationMessages.toString());
             }
         }
     }

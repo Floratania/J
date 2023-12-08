@@ -8,12 +8,14 @@ public class Tax implements Comparable<Tax> {
     private final double amount;
     private final LocalDate date;
     private final boolean paid;
+    private final LocalDate dateOfPaid;
 
     public Tax(Builder builder) {
         this.name = builder.name;
         this.amount = builder.amount;
         this.date = builder.date;
         this.paid = builder.paid;
+        this.dateOfPaid = builder.dateOfPaid;
     }
 
     /**
@@ -43,9 +45,15 @@ public class Tax implements Comparable<Tax> {
         return date;
     }
 
+
+    public LocalDate getDateOfPaid() {
+        return dateOfPaid;
+    }
     public boolean isPaid() {
         return paid;
     }
+
+
 
     /**
      * Checks if two tax objects are equal.
@@ -98,6 +106,8 @@ public class Tax implements Comparable<Tax> {
         private LocalDate date;
         private boolean paid;
 
+        private LocalDate dateOfPaid;
+
         /**
          * Constructor for the tax builder.
          *
@@ -126,6 +136,16 @@ public class Tax implements Comparable<Tax> {
          */
         public Builder date(LocalDate date) {
             this.date = date;
+            return this;
+        }
+        /**
+         * Set the date of the tax.
+         *
+         * @param dateOfPaid The date of the tax.
+         * @return A tax builder.
+         */
+        public Builder dateOfPaid(LocalDate dateOfPaid) {
+            this.dateOfPaid = dateOfPaid;
             return this;
         }
 

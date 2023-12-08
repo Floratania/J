@@ -14,6 +14,7 @@ import static l5.DatabaseConnection.getConnection;
 public class TaxDB {
 
     private static final Logger logger = LoggerFactory.getLogger(TaxDB.class);
+
     public static void createTaxTable() {
         try (Connection connection = getConnection();
              Statement statement = connection.createStatement()) {
@@ -23,7 +24,9 @@ public class TaxDB {
                     "amount DOUBLE PRECISION NOT NULL," +
                     "date DATE NOT NULL," +
                     "paid BOOLEAN NOT NULL," +
-                    "dateOfPaid DATE" +  // Removed unnecessary comma
+                    "dateOfPaid DATE," +
+                    "taxPayer_id BIGINT NOT NULL," +
+                    "FOREIGN KEY (taxPayer_id) REFERENCES tax_payers(id) ON DELETE CASCADE" +
                     ")";
             statement.execute(createTableQuery);
         } catch (SQLException e) {
@@ -41,7 +44,7 @@ public class TaxDB {
         }
     }
 
-    public static List<Tax> getAllTax() {
+    public static List<Tax> getAllTaxes() {
         List<Tax> taxes = new ArrayList<>();
         try (Connection connection = getConnection();
              Statement statement = connection.createStatement()) {
@@ -49,26 +52,7 @@ public class TaxDB {
 
             try (ResultSet resultSet = statement.executeQuery(selectQuery)) {
                 while (resultSet.next()) {
-                    LocalDate dateOfPaid = null;
-                    java.sql.Date sqlDateOfPaid = resultSet.getDate("dateOfPaid");
-                    if (sqlDateOfPaid != null) {
-                        dateOfPaid = sqlDateOfPaid.toLocalDate();
-                    } else {
-                        System.out.println("SQL Date of Paid is null for ID: " + resultSet.getLong("id"));
-                    }
-
-                    Tax tax = new Tax.TaxBuilder(resultSet.getString("name"))
-                            .id(resultSet.getLong("id"))
-                            .amount(resultSet.getDouble("amount"))
-                            .date( resultSet.getDate("date").toLocalDate())
-                            .paid(resultSet.getBoolean("paid"))
-                            .dateOfPaid(dateOfPaid).build();
-
-                    // Check the retrieved values
-                    System.out.println("ID: " + tax.getId() + ", Name: " + tax.getName() +
-                            ", Amount: " + tax.getAmount() + ", Date: " + tax.getDate() +
-                            ", Paid: " + tax.isPaid() + ", Date of Paid: " + dateOfPaid);
-
+                    Tax tax = buildTaxFromResultSet(resultSet);
                     taxes.add(tax);
                 }
             }
@@ -78,21 +62,62 @@ public class TaxDB {
         return taxes;
     }
 
+    public static List<Tax> selectTax(long id) {
+        Tax tax = null;
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM taxes WHERE id = ?")) {
+            preparedStatement.setLong(1, id);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    tax = buildTaxFromResultSet(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("An error occurred while fetching tax with ID {}:", id, e);
+        }
+        return (List<Tax>) tax;
+    }
+
+    public static Tax selectTaxes(long id) {
+        Tax tax = null;
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM taxes WHERE id = ?")) {
+            preparedStatement.setLong(1, id);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    tax = buildTaxFromResultSet(resultSet);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("An error occurred while fetching tax with ID {}:", id, e);
+        }
+        return tax;
+    }
+    public static List<Tax> selectTaxesByTaxPayerId(long id) {
+        List<Tax> taxes = new ArrayList<>();
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM taxes WHERE taxPayer_id = ?")) {
+            preparedStatement.setLong(1, id);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    Tax tax = buildTaxFromResultSet(resultSet);
+                    taxes.add(tax);
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("An error occurred while fetching taxes for taxPayer ID {}:", id, e);
+        }
+        return taxes;
+    }
+
     public static void updateTax(Tax tax) {
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(
                      "UPDATE taxes SET name=?, amount=?, date=?, paid=?, dateOfPaid=? WHERE id=?")) {
-            preparedStatement.setString(1, tax.getName());
-            preparedStatement.setDouble(2, tax.getAmount());
-            preparedStatement.setDate(3, java.sql.Date.valueOf(tax.getDate()));
-            preparedStatement.setBoolean(4, tax.isPaid());
-
-            if (tax.getDateOfPaid() != null) {
-                preparedStatement.setDate(5, java.sql.Date.valueOf(tax.getDateOfPaid()));
-            } else {
-                preparedStatement.setNull(5, java.sql.Types.DATE);
-            }
-
+            setTaxParameters(preparedStatement, tax);
             preparedStatement.setLong(6, tax.getId());
 
             int rowsUpdated = preparedStatement.executeUpdate();
@@ -109,7 +134,7 @@ public class TaxDB {
     public static void insertTax(Tax tax) {
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(
-                     "INSERT INTO taxes (name, amount, date, paid, dateOfPaid) VALUES (?, ?, ?, ?, ?)")) {
+                     "INSERT INTO taxes (name, amount, date, paid, dateOfPaid, taxPayer_id) VALUES (?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, tax.getName());
             preparedStatement.setDouble(2, tax.getAmount());
             preparedStatement.setDate(3, java.sql.Date.valueOf(tax.getDate()));
@@ -120,6 +145,9 @@ public class TaxDB {
             } else {
                 preparedStatement.setNull(5, java.sql.Types.DATE);
             }
+
+            // Ensure a valid taxPayer_id
+            preparedStatement.setLong(6, tax.getTaxPayerId());
 
             int rowsInserted = preparedStatement.executeUpdate();
 
@@ -132,6 +160,7 @@ public class TaxDB {
             logger.error("An error occurred while inserting tax:", e);
         }
     }
+
 
     public static void deleteTax(long taxId) {
         try (Connection connection = getConnection();
@@ -151,7 +180,37 @@ public class TaxDB {
         }
     }
 
+    private static Tax buildTaxFromResultSet(ResultSet resultSet) throws SQLException {
+        LocalDate dateOfPaid = null;
+        java.sql.Date sqlDateOfPaid = resultSet.getDate("dateOfPaid");
+        if (sqlDateOfPaid != null) {
+            dateOfPaid = sqlDateOfPaid.toLocalDate();
+        }
+
+        Tax tax = new Tax.TaxBuilder(resultSet.getString("name"))
+                .id(resultSet.getLong("id"))
+                .amount(resultSet.getDouble("amount"))
+                .date(resultSet.getDate("date").toLocalDate())
+                .paid(resultSet.getBoolean("paid"))
+                .dateOfPaid(dateOfPaid)
+                .build();
+
+// Set the taxPayerId property using the result set
+        tax.setTaxPayerId(resultSet.getLong("taxPayer_id"));
+        return tax;
+
+    }
+
+    private static void setTaxParameters(PreparedStatement preparedStatement, Tax tax) throws SQLException {
+        preparedStatement.setString(1, tax.getName());
+        preparedStatement.setDouble(2, tax.getAmount());
+        preparedStatement.setDate(3, java.sql.Date.valueOf(tax.getDate()));
+        preparedStatement.setBoolean(4, tax.isPaid());
+
+        if (tax.getDateOfPaid() != null) {
+            preparedStatement.setDate(5, java.sql.Date.valueOf(tax.getDateOfPaid()));
+        } else {
+            preparedStatement.setNull(5, java.sql.Types.DATE);
+        }
+    }
 }
-
-
-

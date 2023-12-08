@@ -25,6 +25,8 @@ public class Tax {
     @PastOrPresent(message = "Date of paid must be in the past or present")
     private final LocalDate dateOfPaid;
 
+    private long taxPayerId;
+
     public Tax(TaxBuilder builder) {
         this.id = builder.id;
         this.name = builder.name;
@@ -32,6 +34,7 @@ public class Tax {
         this.date = builder.date;
         this.paid = builder.paid;
         this.dateOfPaid = builder.dateOfPaid;
+        this.taxPayerId = builder.taxPayerId;
     }
 
 
@@ -69,6 +72,27 @@ public class Tax {
         return paid;
     }
 
+    public void setTaxPayerId(long taxPayerId) {
+        this.taxPayerId = taxPayerId;
+    }
+
+
+
+    public long getId() {
+        return id;
+    }
+
+    public LocalDate getDateOfPaid() {
+        return dateOfPaid;
+    }
+
+    public void setAmount(double v) {
+        this.amount = v;
+    }
+
+    public long getTaxPayerId() {
+        return taxPayerId;
+    }
     /**
      * Checks if two tax objects are equal.
      */
@@ -85,24 +109,13 @@ public class Tax {
                 Objects.equals(id, tax.id);
     }
 
+
     /**
      * Returns the hash code of the tax object.
      */
     @Override
     public int hashCode() {
         return Objects.hash(id, name, amount, date, paid, dateOfPaid);
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public LocalDate getDateOfPaid() {
-        return dateOfPaid;
-    }
-
-    public void setAmount(double v) {
-        this.amount = v;
     }
 
 
@@ -120,6 +133,7 @@ public class Tax {
 
 
         private LocalDate dateOfPaid;
+        private long taxPayerId;
 
 
         public TaxBuilder(String name) {
@@ -143,6 +157,10 @@ public class Tax {
 
         public TaxBuilder paid(boolean paid) {
             this.paid = paid;
+            return this;
+        }
+        public TaxBuilder taxPayerId(int i) {
+            this.taxPayerId = i;
             return this;
         }
 
@@ -178,5 +196,11 @@ public class Tax {
                 throw new IllegalArgumentException("Invalid fields: " + String.join(", ", validationMessages));
             }
         }
+
+
+
+//        public TaxPayer.Builder taxPayerId(long taxPayerId) {
+//            return this = taxPayerId();
+//        }
     }
 }
